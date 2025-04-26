@@ -1,0 +1,42 @@
+name: Docker Build (Node.js)
+
+on:
+  push:
+    paths:
+      - '**.js'
+      - 'Dockerfile'
+      - '.github/workflows/docker-matrix-node.yml'
+  workflow_dispatch:
+
+jobs:
+  docker-matrix-node:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        variant: [default, alpine, multistage]
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup docker buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build image and measure time
+        run: |
+          echo "building ${{ matrix.variant }} image"
+          start=$(date +%s)
+          docker build -t lab-node:${{ matrix.variant }} -f Dockerfile${{ matrix.variant == 'default' && '' || '.' }}${{ matrix.variant }} .
+          end=$(date +%s)
+          echo "build time: $((end - start)) seconds" >> report-${{ matrix.variant }}.txt
+
+      - name: Show image size
+        run: |
+          size=$(docker image inspect lab-node:${{ matrix.variant }} --format='{{.Size}}')
+          echo "image size: $((size / 1024 / 1024)) MB" >> report-${{ matrix.variant }}.txt
+
+      - name: Upload summary
+        uses: actions/upload-artifact@v3
+        with:
+          name: report-${{ matrix.variant }}
+          path: report-${{ matrix.variant }}.txt
