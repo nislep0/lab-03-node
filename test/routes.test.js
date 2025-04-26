@@ -11,6 +11,7 @@ beforeAll(async () => {
 afterAll(async () => {
     const db = getDB();
     await db.collection('tasks').deleteMany({});
+    await db.client.close();
 });
 
 describe('Task API', () => {
