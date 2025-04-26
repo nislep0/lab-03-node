@@ -8,9 +8,11 @@ app.use(express.json());
 app.use('/api', routes);
 
 connectDB().then(() => {
-    app.listen(port, () => {
-        console.log(`Server running on http://localhost:${port}`);
-    });
+    if (process.env.NODE_ENV !== 'test') {
+    	app.listen(port, () => {
+            console.log(`Server running on http://localhost:${port}`);
+    	});
+    }
 });
 
 module.exports = app;
